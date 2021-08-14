@@ -24,8 +24,18 @@ public class JTreeRenderer extends DefaultTreeCellRenderer{
 
 		for(FileStorage.Nodes curnode : Main.allnodes) {
 			if(curnode.node == node) {
-				if(curnode.extension.equals(".txt"))
-					setIcon(new ImageIcon(Main.class.getResource("ExitIcon.png")));
+				if(curnode.folder) {
+					if(expanded) {
+						
+					}
+				}
+				if(curnode.extension.equals(".mp4")) {
+					setIcon(new ImageIcon(Main.class.getResource("VideoIcon.png")));
+				}
+				
+				if(curnode.extension.equals(".png") || curnode.extension.equals(".jpg")) {
+					setIcon(new ImageIcon(Main.class.getResource("ImageIcon.png")));
+				}
 			}
 		}
 

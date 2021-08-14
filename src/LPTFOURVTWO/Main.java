@@ -44,13 +44,17 @@ public class Main {
 
 	private static JMenu file, edit, help;
 
-	public static JMenuItem newfolder, newtextdocument, newwhiteboard;
+	public static JMenuItem newfolder, newtextdocument, newwhiteboard, refresh;
 
 	public static JMenuItem copy, paste, cut;
 
 	static JMenuItem website;
 
-	static DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+	public static File dir;
+
+	public static JTree notetree;
+
+	public static DefaultMutableTreeNode root = new DefaultMutableTreeNode();
 
 	public static LinkedList <FileStorage.Nodes> allnodes = new LinkedList <FileStorage.Nodes>();
 
@@ -75,7 +79,7 @@ public class Main {
 
 		ImageIcon minimizeicon = new ImageIcon(Main.class.getResource("MinimizeIcon.png"));
 
-		ImageIcon fullscreenicon = new ImageIcon(Main.class.getResource("FullscreenIcon.png"));
+		ImageIcon fullscreenicon = new ImageIcon(Main.class.getResource("FullScreenIcon.png"));
 
 		ImageIcon closeicon = new ImageIcon(Main.class.getResource("ExitIcon.png"));
 
@@ -136,6 +140,7 @@ public class Main {
 		newfolder = new JMenuItem("New Folder");
 		newtextdocument = new JMenuItem("New Text");
 		newwhiteboard = new JMenuItem("New Whiteboard");
+		refresh = new JMenuItem("Refresh Files");
 
 		copy = new JMenuItem("Copy");
 		paste = new JMenuItem("Paste");
@@ -158,6 +163,7 @@ public class Main {
 		file.add(newfolder);
 		file.add(newtextdocument);
 		file.add(newwhiteboard);
+		//file.add(refresh);
 
 		edit.add(copy);
 		edit.add(paste);
@@ -169,6 +175,7 @@ public class Main {
 		newfolder.addActionListener(tbl);
 		newtextdocument.addActionListener(tbl);
 		newwhiteboard.addActionListener(tbl);
+		refresh.addActionListener(tbl);
 
 		copy.addActionListener(tbl);
 		paste.addActionListener(tbl);
@@ -183,11 +190,19 @@ public class Main {
 		notes.setLocation(0, dragbar.getHeight()+topbar.getHeight());
 
 		String name = System.getProperty("user.name");
-		File dir = new File("C:\\Users\\" + name + "\\Desktop\\Better Notes");
-		addNodes(root, dir);
+		dir = new File("C:\\Users\\" + name + "\\Desktop\\Better Notes");
+		if(dir.isDirectory()) {
+			addNodes(root, dir);
+		}else {
+			if(dir.mkdir()) {
+				addNodes(root, dir);
+			}else {
+				System.exit(0);
+			}
+		}
 
 		//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		JTree notetree = new JTree(root);
+		notetree = new JTree(root);
 		JTreeRenderer jtr = new JTreeRenderer();
 		notetree.setCellRenderer(jtr);
 		//UIManager.setLookAndFeel(defaultlf);
@@ -209,14 +224,16 @@ public class Main {
 		frame.getContentPane().add(work);
 	}
 
-	private static void addNodes(DefaultMutableTreeNode parentnode, File dir) {
+	public static void addNodes(DefaultMutableTreeNode parentnode, File dir) {
 		if(dir.isDirectory()) {
 			for (File fileEntry : dir.listFiles()) {
 				DefaultMutableTreeNode node = new DefaultMutableTreeNode(fileEntry.getName());
-				allnodes.add(new FileStorage.Nodes(node, getExtension(fileEntry.getName())));
 				parentnode.add(node);
 				if (fileEntry.isDirectory()) {
+					allnodes.add(new FileStorage.Nodes(node, getExtension(fileEntry.getName()), fileEntry, true));
 					addNodes(node, new File(fileEntry.getPath()));
+				}else {
+					allnodes.add(new FileStorage.Nodes(node, getExtension(fileEntry.getName()), fileEntry, false));
 				}
 			}
 		}
