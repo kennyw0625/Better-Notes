@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.io.File;
 import java.util.LinkedList;
-import java.util.Optional;
 
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
@@ -20,6 +19,13 @@ import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import LPTFOURVTWO.Utils.DragBarButtons;
+import LPTFOURVTWO.Utils.DragNDropFrame;
+import LPTFOURVTWO.Utils.FileStorage;
+import LPTFOURVTWO.Utils.JTreeRenderer;
+import LPTFOURVTWO.Utils.TopbarListener;
+
 import javax.swing.JButton;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -28,25 +34,25 @@ public class Main {
 
 	static LookAndFeel defaultlf = UIManager.getLookAndFeel();
 
-	static JFrame frame = new JFrame("Better Notes");
+	public static JFrame frame = new JFrame("Better Notes");
 
 	private static JPanel dragbar = new JPanel(), topbar = new JPanel(), notes = new JPanel(), work = new JPanel();
 
 	private static JLabel BetterNotes = new JLabel("Better Notes");
 
-	static JButton minimize = new JButton(), fullscreen = new JButton(), close = new JButton();
+	public static JButton minimize = new JButton(), fullscreen = new JButton(), close = new JButton();
 
 	private static JMenu file, edit, help;
 
-	static JMenuItem newfolder, newtextdocument, newwhiteboard;
+	public static JMenuItem newfolder, newtextdocument, newwhiteboard;
 
-	static JMenuItem copy, paste, cut;
+	public static JMenuItem copy, paste, cut;
 
 	static JMenuItem website;
 
 	static DefaultMutableTreeNode root = new DefaultMutableTreeNode();
 
-	static LinkedList <FileStorage.Nodes> allnodes = new LinkedList <FileStorage.Nodes>();
+	public static LinkedList <FileStorage.Nodes> allnodes = new LinkedList <FileStorage.Nodes>();
 
 	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 		initialize();
@@ -179,7 +185,7 @@ public class Main {
 		String name = System.getProperty("user.name");
 		File dir = new File("C:\\Users\\" + name + "\\Desktop\\Better Notes");
 		addNodes(root, dir);
-		
+
 		//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		JTree notetree = new JTree(root);
 		JTreeRenderer jtr = new JTreeRenderer();
@@ -194,12 +200,12 @@ public class Main {
 		notes.add(notepane);		
 
 		frame.getContentPane().add(notes);
-		
+
 		work.setBackground(new Color(255, 255, 255));
 		work.setLayout(new GroupLayout(work));
 		work.setSize(frame.getWidth()-notes.getWidth(), frame.getHeight()-(dragbar.getHeight()+topbar.getHeight()));
 		work.setLocation(notes.getWidth(), dragbar.getHeight()+topbar.getHeight());
-		
+
 		frame.getContentPane().add(work);
 	}
 
@@ -207,7 +213,7 @@ public class Main {
 		if(dir.isDirectory()) {
 			for (File fileEntry : dir.listFiles()) {
 				DefaultMutableTreeNode node = new DefaultMutableTreeNode(fileEntry.getName());
-				allnodes.add(new FileStorage.Nodes(node, getExtension(fileEntry.getName()).toString())); 
+				allnodes.add(new FileStorage.Nodes(node, getExtension(fileEntry.getName())));
 				parentnode.add(node);
 				if (fileEntry.isDirectory()) {
 					addNodes(node, new File(fileEntry.getPath()));
@@ -216,9 +222,11 @@ public class Main {
 		}
 	}
 
-	private static Optional<String> getExtension(String filename) {
-		return Optional.ofNullable(filename)
-				.filter(f -> f.contains("."))
-				.map(f -> f.substring(filename.lastIndexOf(".") + 1));
+	private static String getExtension(String filename) {
+		int startin = filename.lastIndexOf('.');
+		if(startin == -1) {
+			return "???";
+		}
+		return filename.substring(startin, filename.length());
 	}
 }
