@@ -4,9 +4,15 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Scanner;
 
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -14,6 +20,8 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
@@ -24,6 +32,7 @@ import LPTFOURVTWO.Utils.DragBarButtons;
 import LPTFOURVTWO.Utils.DragNDropFrame;
 import LPTFOURVTWO.Utils.FileStorage;
 import LPTFOURVTWO.Utils.JTreeRenderer;
+import LPTFOURVTWO.Utils.SliderChangeListener;
 import LPTFOURVTWO.Utils.TopbarListener;
 
 import javax.swing.JButton;
@@ -34,21 +43,23 @@ public class Main {
 
 	static LookAndFeel defaultlf = UIManager.getLookAndFeel();
 
-	public static JFrame frame = new JFrame("Better Notes");
+	public static JFrame frame = new JFrame("‎‎‎‎‎‎‎‎‎Better Notes");
 
-	private static JPanel dragbar = new JPanel(), topbar = new JPanel(), notes = new JPanel(), work = new JPanel();
+	private static JPanel dragbar = new JPanel(), topbar = new JPanel(), notes = new JPanel();
 
-	private static JLabel BetterNotes = new JLabel("Better Notes");
+	public static JPanel work = new JPanel();
+
+	public static JLabel BetterNotes = new JLabel("  Better Notes");
 
 	public static JButton minimize = new JButton(), fullscreen = new JButton(), close = new JButton();
 
 	private static JMenu file, edit, help;
 
-	public static JMenuItem newfolder, newtextdocument, newwhiteboard, refresh;
+	public static JMenuItem save, newfolder, newtextdocument, newwhiteboard;
 
 	public static JMenuItem copy, paste, cut;
 
-	static JMenuItem website;
+	public static JMenuItem website;
 
 	public static File dir;
 
@@ -58,12 +69,92 @@ public class Main {
 
 	public static LinkedList <FileStorage.Nodes> allnodes = new LinkedList <FileStorage.Nodes>();
 
-	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+	public static FileStorage.Nodes selected;
+	public static FileStorage.Nodes selectedParent;
+
+
+	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, FileNotFoundException {
 		initialize();
 		frame.setVisible(true);
 	}
 
+	public static JTextArea area = new JTextArea();
+	private static JScrollPane scrollPane = new JScrollPane(area);
+
+	public static void addTextFile(FileStorage.Nodes selected) throws FileNotFoundException {
+		work.removeAll();
+		work.revalidate();
+		work.repaint();
+
+		scrollPane.setBackground(new Color(255, 255, 255));
+		scrollPane.setSize(work.getWidth(), work.getHeight());
+		scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		work.add(scrollPane);
+
+		File file = selected.file;
+		Scanner sc = new Scanner(file);
+		String content = "no note";
+		boolean first = false;
+		while(sc.hasNextLine()) {
+			if(!first) {
+				content = "";
+				first = true;
+			}else {
+				content += sc.nextLine() + "\n";
+			}
+		}
+		area.setText(content);
+
+		sc.close();
+	}
+
+	public static JSlider slider;
+	public static JScrollPane imagescrollPane;
+	public static JLabel label = new JLabel();
+	public static BufferedImage image;
+
+	public static void addImageFile(FileStorage.Nodes selected) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+		work.removeAll();
+		work.revalidate();
+		work.repaint();
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
+		slider = new JSlider(JSlider.HORIZONTAL, 200);
+		slider.setValue(100);
+		slider.setSize(work.getWidth(), 35);
+		slider.setFocusable(false);
+		slider.setMinorTickSpacing(10);
+		slider.setMajorTickSpacing(20);
+		slider.setFont(new Font("Serif", Font.BOLD, 9));
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+		SliderChangeListener scl = new SliderChangeListener();
+		slider.addChangeListener(scl);
+
+		image = ImageIO.read(selected.file);
+
+		label.setIcon(new ImageIcon(image));
+		label.setSize(work.getWidth(), work.getHeight()-slider.getHeight());
+
+		imagescrollPane = new JScrollPane(label);
+		imagescrollPane.setSize(work.getWidth(), work.getHeight()-slider.getHeight());
+		imagescrollPane.setBorder(null);
+
+		UIManager.setLookAndFeel(defaultlf);
+
+		work.add(slider);
+
+		work.add(imagescrollPane);
+		work.repaint();
+
+		BetterNotes.setText("  Better Notes - " + selected.file.getName() + " @ 100%");
+		//work.add(new DrawPanel());
+
+	}
+
 	private static void initialize() throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+		frame.getRootPane().setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
 		frame.getContentPane().setLayout(new GroupLayout(frame.getContentPane()));
 		frame.setSize(1280, 720);
 		frame.setUndecorated(true);
@@ -72,7 +163,7 @@ public class Main {
 		dragbar.setLayout(new GroupLayout(dragbar));
 		dragbar.setSize(frame.getWidth(), 20);
 
-		BetterNotes.setSize(new Dimension(150, 20));
+		BetterNotes.setSize(new Dimension(1000, 20));
 		minimize.setSize(new Dimension(30, 20));
 		fullscreen.setSize(new Dimension(30, 20));
 		close.setSize(new Dimension(30, 20));
@@ -137,10 +228,10 @@ public class Main {
 		edit = new JMenu("Edit");
 		help = new JMenu("Help");
 
+		save = new JMenuItem("Save");
 		newfolder = new JMenuItem("New Folder");
 		newtextdocument = new JMenuItem("New Text");
 		newwhiteboard = new JMenuItem("New Whiteboard");
-		refresh = new JMenuItem("Refresh Files");
 
 		copy = new JMenuItem("Copy");
 		paste = new JMenuItem("Paste");
@@ -160,10 +251,10 @@ public class Main {
 		menuBar.add(edit);
 		menuBar.add(help);
 
+		file.add(save);
 		file.add(newfolder);
 		file.add(newtextdocument);
 		file.add(newwhiteboard);
-		//file.add(refresh);
 
 		edit.add(copy);
 		edit.add(paste);
@@ -172,16 +263,16 @@ public class Main {
 		help.add(website);
 
 		TopbarListener tbl = new TopbarListener();
+		save.addActionListener(tbl);
 		newfolder.addActionListener(tbl);
 		newtextdocument.addActionListener(tbl);
 		newwhiteboard.addActionListener(tbl);
-		refresh.addActionListener(tbl);
 
 		copy.addActionListener(tbl);
 		paste.addActionListener(tbl);
 		cut.addActionListener(tbl);
 
-		help.addActionListener(tbl);
+		website.addActionListener(tbl);
 
 		frame.getContentPane().add(topbar);
 
@@ -201,16 +292,17 @@ public class Main {
 			}
 		}
 
-		//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		notetree = new JTree(root);
-		JTreeRenderer jtr = new JTreeRenderer();
-		notetree.setCellRenderer(jtr);
-		//UIManager.setLookAndFeel(defaultlf);
-		JScrollPane notepane = new JScrollPane(notetree);
-
 		notetree.setBackground(new Color(227, 229, 232));
 		notetree.setRootVisible(false);
-		notepane.setBorder(null);
+
+		JTreeRenderer jtr = new JTreeRenderer();
+		notetree.setCellRenderer(jtr);
+
+		JScrollPane notepane = new JScrollPane(notetree);
+
+		notepane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		notepane.setBackground(new Color(227, 229, 232));
 
 		notes.add(notepane);		
 
@@ -220,8 +312,10 @@ public class Main {
 		work.setLayout(new GroupLayout(work));
 		work.setSize(frame.getWidth()-notes.getWidth(), frame.getHeight()-(dragbar.getHeight()+topbar.getHeight()));
 		work.setLocation(notes.getWidth(), dragbar.getHeight()+topbar.getHeight());
+		work.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
 		frame.getContentPane().add(work);
+
 	}
 
 	public static void addNodes(DefaultMutableTreeNode parentnode, File dir) {
@@ -244,6 +338,6 @@ public class Main {
 		if(startin == -1) {
 			return "???";
 		}
-		return filename.substring(startin, filename.length());
+		return filename.substring(startin, filename.length()).toLowerCase();
 	}
 }
