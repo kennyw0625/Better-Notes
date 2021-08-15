@@ -1,11 +1,12 @@
 package LPTFOURVTWO.Utils;
 
+import java.awt.Image;
 import java.io.File;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class FileStorage {
-
+	public static Image whiteboard;
 	public static class Nodes {
 		public DefaultMutableTreeNode node;
 		public String extension;

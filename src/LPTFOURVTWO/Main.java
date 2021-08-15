@@ -4,6 +4,9 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,6 +15,11 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
@@ -34,6 +42,8 @@ import LPTFOURVTWO.Utils.FileStorage;
 import LPTFOURVTWO.Utils.JTreeRenderer;
 import LPTFOURVTWO.Utils.SliderChangeListener;
 import LPTFOURVTWO.Utils.TopbarListener;
+import LPTFOURVTWO.Utils.Video;
+import jaco.mp3.player.MP3Player;
 
 import javax.swing.JButton;
 import javax.swing.JMenuBar;
@@ -55,7 +65,7 @@ public class Main {
 
 	private static JMenu file, edit, help;
 
-	public static JMenuItem save, newfolder, newtextdocument, newwhiteboard;
+	public static JMenuItem save, newfolder, newtextdocument, newwhiteboard, refresh;
 
 	public static JMenuItem copy, paste, cut;
 
@@ -72,8 +82,12 @@ public class Main {
 	public static FileStorage.Nodes selected;
 	public static FileStorage.Nodes selectedParent;
 
+	public static Image whiteboard = new ImageIcon(Main.class.getResource("WhiteBoardIcon.png")).getImage();
 
-	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, FileNotFoundException {
+	public static String os = "";
+
+
+	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, InterruptedException, FileNotFoundException, LineUnavailableException {
 		initialize();
 		frame.setVisible(true);
 	}
@@ -82,6 +96,11 @@ public class Main {
 	private static JScrollPane scrollPane = new JScrollPane(area);
 
 	public static void addTextFile(FileStorage.Nodes selected) throws FileNotFoundException {
+		if(playermp3 != null)
+			playermp3.stop();
+		if(playerother != null)
+			playerother.close();
+
 		work.removeAll();
 		work.revalidate();
 		work.repaint();
@@ -115,6 +134,11 @@ public class Main {
 	public static BufferedImage image;
 
 	public static void addImageFile(FileStorage.Nodes selected) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+		if(playermp3 != null)
+			playermp3 .stop();
+		if(playerother != null)
+			playerother.close();
+
 		work.removeAll();
 		work.revalidate();
 		work.repaint();
@@ -149,11 +173,148 @@ public class Main {
 		work.repaint();
 
 		BetterNotes.setText("  Better Notes - " + selected.file.getName() + " @ 100%");
-		//work.add(new DrawPanel());
-
 	}
 
-	private static void initialize() throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+	private static MP3Player playermp3;
+
+	public static void addAudioFileMP3(FileStorage.Nodes selected) {
+		if(playermp3 != null)
+			playermp3.stop();
+		if(playerother != null)
+			playerother.close();
+
+		work.removeAll();
+		work.revalidate();
+		work.repaint();
+
+		File mp3 = selected.file;
+		playermp3 = new MP3Player(mp3);
+
+		BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Paused)");
+
+		JButton pauseplay = new JButton("Play");
+		pauseplay.setBackground(new Color(200, 200, 200));
+		pauseplay.setBorderPainted(false);
+		pauseplay.setFocusable(false);
+		pauseplay.setSize(100, 100);
+
+		JButton replay = new JButton("Restart");
+		replay.setBackground(new Color(200, 200, 200));
+		replay.setBorderPainted(false);
+		replay.setFocusable(false);
+		replay.setLocation(pauseplay.getWidth(), 0);
+		replay.setSize(100, 100);
+
+
+		pauseplay.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(playermp3.isPaused()) {
+					playermp3.play();
+					pauseplay.setText("Pause");
+					BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Playing)");
+				}else {
+					playermp3.pause();
+					pauseplay.setText("Play");
+					BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Paused)");
+				}
+			}
+
+		});
+
+		replay.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addAudioFileMP3(selected);
+			}
+
+		});
+
+		work.add(pauseplay);
+		work.add(replay);
+		work.repaint();
+		playermp3.play();
+		playermp3.pause();
+	}
+
+	private static Clip playerother;
+
+	public static void addAudioFileOther(FileStorage.Nodes selected) throws LineUnavailableException, UnsupportedAudioFileException, IOException {
+		if(playermp3 != null)
+			playermp3.stop();
+		if(playerother != null)
+			playerother.close();
+
+		work.removeAll();
+		work.revalidate();
+		work.repaint();
+
+		File mp3 = selected.file;
+		AudioInputStream ais = AudioSystem.getAudioInputStream(mp3);
+		playerother = AudioSystem.getClip();
+		playerother.open(ais);
+
+		BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Paused)");
+
+		JButton pauseplay = new JButton("Play");
+		pauseplay.setBackground(new Color(200, 200, 200));
+		pauseplay.setBorderPainted(false);
+		pauseplay.setFocusable(false);
+		pauseplay.setSize(100, 100);
+
+		JButton replay = new JButton("Restart");
+		replay.setBackground(new Color(200, 200, 200));
+		replay.setBorderPainted(false);
+		replay.setFocusable(false);
+		replay.setLocation(pauseplay.getWidth(), 0);
+		replay.setSize(100, 100);
+
+
+		pauseplay.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(!playerother.isRunning()) {
+					playerother.start();
+					pauseplay.setText("Pause");
+					BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Playing)");
+				}else {
+					playerother.stop();;
+					pauseplay.setText("Play");
+					BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Paused)");
+				}
+			}
+
+		});
+
+		replay.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				playerother.setFramePosition(0);
+			}
+
+		});
+
+		work.add(pauseplay);
+		work.add(replay);
+		work.repaint();
+	}
+
+	public static void addVideoFile(FileStorage.Nodes selected) throws IOException {
+		BetterNotes.setText("  Better Notes - " + selected.file.getName() + " (Paused)");
+		Video application = new Video("VideoPlayer");
+		application.initialize(); 
+		application.setVisible(true);  
+		application.loadVideo(selected.file.getPath());
+	}
+
+	private static void initialize() throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException, LineUnavailableException {
+		FileStorage.whiteboard = whiteboard;
+
+		frame.setIconImage(new ImageIcon(Main.class.getResource("BetterNotesIcon.png")).getImage());
 		frame.getRootPane().setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
 		frame.getContentPane().setLayout(new GroupLayout(frame.getContentPane()));
 		frame.setSize(1280, 720);
@@ -218,8 +379,6 @@ public class Main {
 		topbar.setSize(frame.getWidth(), 20);
 		topbar.setLocation(0, dragbar.getHeight());
 
-		//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
 		Font f = new Font("sans-serif", Font.PLAIN, 12);
 		UIManager.put("Menu.font", f);
 		UIManager.put("MenuItem.font", f);
@@ -232,6 +391,7 @@ public class Main {
 		newfolder = new JMenuItem("New Folder");
 		newtextdocument = new JMenuItem("New Text");
 		newwhiteboard = new JMenuItem("New Whiteboard");
+		refresh = new JMenuItem("Refresh Files");
 
 		copy = new JMenuItem("Copy");
 		paste = new JMenuItem("Paste");
@@ -243,8 +403,6 @@ public class Main {
 		menuBar.setBackground(new Color(242, 243, 245));
 		menuBar.setBorder(null);
 
-		//UIManager.setLookAndFeel(defaultlf);
-
 		topbar.add(menuBar);
 
 		menuBar.add(file);
@@ -255,6 +413,7 @@ public class Main {
 		file.add(newfolder);
 		file.add(newtextdocument);
 		file.add(newwhiteboard);
+		file.add(refresh);
 
 		edit.add(copy);
 		edit.add(paste);
@@ -267,6 +426,7 @@ public class Main {
 		newfolder.addActionListener(tbl);
 		newtextdocument.addActionListener(tbl);
 		newwhiteboard.addActionListener(tbl);
+		refresh.addActionListener(tbl);
 
 		copy.addActionListener(tbl);
 		paste.addActionListener(tbl);
@@ -280,8 +440,12 @@ public class Main {
 		notes.setSize(200, frame.getHeight()-dragbar.getHeight());
 		notes.setLocation(0, dragbar.getHeight()+topbar.getHeight());
 
-		String name = System.getProperty("user.name");
-		dir = new File("C:\\Users\\" + name + "\\Desktop\\Better Notes");
+		String desktop = javax.swing.filechooser.FileSystemView.getFileSystemView().getHomeDirectory().getPath();
+		dir = new File(desktop + "/Better Notes");
+
+		allnodes.add(new FileStorage.Nodes(root, "???", dir, true));
+		selectedParent = new FileStorage.Nodes(root, "???", dir, true);
+
 		if(dir.isDirectory()) {
 			addNodes(root, dir);
 		}else {
@@ -340,4 +504,5 @@ public class Main {
 		}
 		return filename.substring(startin, filename.length()).toLowerCase();
 	}
+
 }

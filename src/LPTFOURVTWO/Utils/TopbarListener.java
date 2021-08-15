@@ -9,13 +9,13 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import LPTFOURVTWO.Main;
 
 public class TopbarListener implements ActionListener{
 
+	@SuppressWarnings("static-access")
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
@@ -29,29 +29,27 @@ public class TopbarListener implements ActionListener{
 		}
 
 		if(e.getSource() == Main.newfolder) {
-			File newdoc = new File(Main.selectedParent.file.getPath() + "\\New Folder");
+			File newdoc = new File(Main.selectedParent.file.getPath() + "/New Folder");
 			int count = 1;
 			while(newdoc.exists()) {
-				newdoc = new File(Main.selectedParent.file.getPath() + "\\New Folder (" + count + ")");
+				newdoc = new File(Main.selectedParent.file.getPath() + "/New Folder (" + count + ")");
 				count++;
 			}
 
 			newdoc.mkdir();
 			
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode(newdoc.getName());
-			Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node.add(node);
-			int index = Main.allnodes.indexOf(Main.selectedParent);
-			Main.allnodes.add(index+1, new FileStorage.Nodes(node, "???", newdoc, true));
+			Main.root.removeAllChildren();
+			Main.addNodes(Main.root, Main.dir);
 			DefaultTreeModel model = (DefaultTreeModel)Main.notetree.getModel();
-			model.reload(Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node);
+			model.reload(Main.root);
 			return;
 		}
 
 		if(e.getSource() == Main.newtextdocument) {
-			File newdoc = new File(Main.selectedParent.file.getPath() + "\\New Document.txt");
+			File newdoc = new File(Main.selectedParent.file.getPath() + "/New Document.txt");
 			int count = 1;
 			while(newdoc.exists()) {
-				newdoc = new File(Main.selectedParent.file.getPath() + "\\New Document (" + count + ").txt");
+				newdoc = new File(Main.selectedParent.file.getPath() + "/New Document (" + count + ").txt");
 				count++;
 			}
 
@@ -61,36 +59,43 @@ public class TopbarListener implements ActionListener{
 				e1.printStackTrace();
 			}
 			
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode(newdoc.getName());
-			Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node.add(node);
-			int index = Main.allnodes.indexOf(Main.selectedParent);
-			Main.allnodes.add(index+1, new FileStorage.Nodes(node, ".txt", newdoc, false));
+			Main.root.removeAllChildren();
+			Main.addNodes(Main.root, Main.dir);
 			DefaultTreeModel model = (DefaultTreeModel)Main.notetree.getModel();
-			model.reload(Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node);
+			model.reload(Main.root);
 			return;
 		}
 
 		if(e.getSource() == Main.newwhiteboard) {
-			File newdoc = new File(Main.selectedParent.file.getPath() + "\\New WhiteBoard.png");
-			int count = 1;
-			while(newdoc.exists()) {
-				newdoc = new File(Main.selectedParent.file.getPath() + "\\New WhiteBoard (" + count + ").png");
-				count++;
-			}
-
-			try {
-				newdoc.createNewFile();
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode(newdoc.getName());
-			Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node.add(node);
-			int index = Main.allnodes.indexOf(Main.selectedParent);
-			Main.allnodes.add(index+1, new FileStorage.Nodes(node, ".png", newdoc, false));
-			DefaultTreeModel model = (DefaultTreeModel)Main.notetree.getModel();
-			model.reload(Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node);
+			WhiteBoard whiteboard = new WhiteBoard();
+			whiteboard.drawPane();
+//			File newdoc = new File(Main.selectedParent.file.getPath() + "\\New WhiteBoard.png");
+//			int count = 1;
+//			while(newdoc.exists()) {
+//				newdoc = new File(Main.selectedParent.file.getPath() + "\\New WhiteBoard (" + count + ").png");
+//				count++;
+//			}
+//
+//			try {
+//				newdoc.createNewFile();
+//			} catch (IOException e1) {
+//				e1.printStackTrace();
+//			}
+//			
+//			DefaultMutableTreeNode node = new DefaultMutableTreeNode(newdoc.getName());
+//			Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node.add(node);
+//			int index = Main.allnodes.indexOf(Main.selectedParent);
+//			Main.allnodes.add(index+1, new FileStorage.Nodes(node, ".png", newdoc, false));
+//			DefaultTreeModel model = (DefaultTreeModel)Main.notetree.getModel();
+//			model.reload(Main.allnodes.get(Main.allnodes.indexOf(Main.selectedParent)).node);
 			return;
+		}
+		
+		if(e.getSource() == Main.refresh) {
+			Main.root.removeAllChildren();
+			Main.addNodes(Main.root, Main.dir);
+			DefaultTreeModel model = (DefaultTreeModel)Main.notetree.getModel();
+			model.reload(Main.root);
 		}
 
 
@@ -118,5 +123,4 @@ public class TopbarListener implements ActionListener{
 			}
 		}
 	}
-
 }

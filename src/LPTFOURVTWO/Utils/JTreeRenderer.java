@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
@@ -71,6 +73,9 @@ public class JTreeRenderer extends DefaultTreeCellRenderer{
 				if(curnode.extension.equals(".txt")) 
 					setIcon(new ImageIcon(Main.class.getResource("TextIcon.png")));
 
+				if(curnode.extension.equals(".mp3") || curnode.extension.equals(".wav") || curnode.extension.equals(".au") || curnode.extension.equals(".aiff")) 
+					setIcon(new ImageIcon(Main.class.getResource("MicrophoneIcon.png")));
+
 				if(Main.selected != curnode) {
 					if(isSelected) {
 						c.setBackground(new Color(218, 221, 225));
@@ -80,14 +85,35 @@ public class JTreeRenderer extends DefaultTreeCellRenderer{
 						if(curnode.extension.equals(".txt"))
 							try {
 								Main.addTextFile(curnode);
+								Main.BetterNotes.setText("  Better Notes - " + curnode.file.getName());
 							} catch (FileNotFoundException e) {
 								e.printStackTrace();
 							}
 
-						if(curnode.extension.equals(".png")) {
+						if(curnode.extension.equals(".png") || curnode.extension.equals(".jpg")) {
 							try {
 								Main.addImageFile(curnode);
 							} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+								e.printStackTrace();
+							}
+						}
+
+						if(curnode.extension.equals(".mp3")) {
+							Main.addAudioFileMP3(curnode);
+						}
+
+						if(curnode.extension.equals(".wav") || curnode.extension.equals(".au") || curnode.extension.equals(".aiff")) {
+							try {
+								Main.addAudioFileOther(curnode);
+							} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+								e.printStackTrace();
+							}
+						}
+
+						if(curnode.extension.equals(".mp4")) {
+							try {
+								Main.addVideoFile(curnode);
+							} catch (IOException e) {
 								e.printStackTrace();
 							}
 						}
